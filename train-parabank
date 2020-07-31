@@ -1,0 +1,5 @@
+# assumes you've run conda env create -f environment.yml
+conda activate dgm_latent_bow
+cd src
+# update model_version as needed ; assumes you are using gpu 1 as specified in nvidia-smi
+python main.py --dataset=parabank2 --model_name=parabank --model_version=0.1 --save_ckpt=True --gpu_id=1

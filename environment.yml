@@ -1,0 +1,11 @@
+name: dgm_latent_bow
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - tensorflow=1.15
+  - tensorflow-gpu=1.15
+  - tqdm
+  - nltk
+prefix: /z/aolney/software/miniconda3/envs/dgm_latent_bow
+

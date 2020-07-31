@@ -483,6 +483,9 @@ class Dataset(object):
       train_sentences = mscoco_read_json(self.dataset_path["train"])
     elif(self.dataset == "quora"):
       train_sentences = quora_read(self.dataset_path["train"])
+    #reformat.fsx converts parabank to quora format
+    elif(self.dataset == "parabank2"):
+      train_sentences = quora_read(self.dataset_path["train"])
 
     # corpus_statistics(train_sentences)
 

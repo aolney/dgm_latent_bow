@@ -22,6 +22,11 @@ from lm import LM
 from tqdm import tqdm
 from time import time
 
+#install stopwords
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+
 flags = tf.flags
 FLAGS = flags.FLAGS
 

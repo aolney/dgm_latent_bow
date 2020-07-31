@@ -20,6 +20,10 @@ class Config:
     "quora": {
       "train": "../data/quora/train.txt", 
       "test": ""
+    },
+    "parabank2": {
+      "train": "../data/parabank2/train.txt", 
+      "test": ""
     }
   }
 
@@ -27,6 +31,7 @@ class Config:
 
   max_sent_len = {"mscoco": 16, 
                   'mscoco14': 16, 
+                  "parabank2": 20,
                   "quora": 20} # 95 percentile 
   max_enc_len = {'wikibio': 85}
   max_dec_len = {'wikibio': 42}
@@ -146,6 +151,12 @@ class Config:
       self.max_enc_bow = 11
       self.max_dec_bow = 11
       self.sample_size = 11
+
+    if(self.dataset == "parabank2"):
+      self.num_paraphrase = 1
+      self.max_enc_bow = 20
+      self.max_dec_bow = 20
+      self.sample_size = 20
 
     if(flags.state_size != -1): self.state_size = flags.state_size
     if(flags.prior != ""): self.prior = config.prior

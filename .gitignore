@@ -1,5 +1,7 @@
 .vscode
-src/__pycache__
+__pycache__/
 data/mscoco
+data/parabank2/parabank2.zip
+data/parabank2/train.txt
 outputs
 .DS_Store

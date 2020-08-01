@@ -3,5 +3,7 @@ __pycache__/
 data/mscoco
 data/parabank2/parabank2.zip
 data/parabank2/train.txt
+src/parabank2_dev_index.txt
+src/parabank2_train_index.txt
 outputs
 .DS_Store

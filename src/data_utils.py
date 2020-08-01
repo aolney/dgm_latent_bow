@@ -413,6 +413,20 @@ def train_dev_split(dataset_name, train_sets, ratio=0.8):
       if(i in train_index): train.append(train_sets[i])
       elif(i in dev_index): dev.append(train_sets[i])
 
+  if(dataset_name == "parabank2"): 
+    train_index_file = "parabank2_train_index.txt"
+    with open(train_index_file) as fd:
+      train_index = set([int(l[:-1]) for l in fd.readlines()])
+
+    dev_index_file = "parabank2_dev_index.txt"
+    with open(dev_index_file) as fd:
+      dev_index = set([int(l[:-1]) for l in fd.readlines()])
+
+    train, dev = [], []
+    for i in range(len(train_sets)):
+      if(i in train_index): train.append(train_sets[i])
+      elif(i in dev_index): dev.append(train_sets[i])
+
   elif(dataset_name == 'mscoco14'):
     with open('mscoco14_val_index.txt') as fd:
       val_index = set([int(l[:-1]) for l in fd])

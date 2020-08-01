@@ -10,8 +10,8 @@ let mutable split = null
 
 while not <| reader.EndOfStream do
     split <- reader.ReadLine().Split('\t')
-    //write only the top match to save space
-    writer.WriteLine( split.[1] + "\t" + split.[2] )
+    for i = 2 to split.Length - 1 do
+        writer.WriteLine( split.[1] + "\t" + split.[i] )
 
 writer.Flush()
 writer.Close()

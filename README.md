@@ -1,3 +1,18 @@
+# Fork
+
+This fork:
+
+- Adds a conda enviroment for easier set up
+- Adds support for the [Parabank2](http://decomp.io/projects/parabank2/) dataset
+
+To train:
+
+- Download the parabank2.zip file to `data/parabank2` ; make sure the zip is called `parabank2.zip`
+- Run `dotnet fsi reformat.fsx` to format the zipped data without explicitly unzipping, creating `train.txt`
+- Run `source train-parabank` from the repo base directory
+
+--------------------------------
+
 \*\*Update\*\*: [_On the Interpretability of Discrete Set Representations: A Bayesian Perspective_](https://github.com/FranxYao/dgm_latent_bow/blob/master/doc/lbow_interpretability.pdf)
 * The discussion about the identifiability and interpretability of the LBOW model in the unsupervised setting. 
 * Work in progress

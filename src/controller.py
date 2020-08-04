@@ -11,6 +11,7 @@ import tensorflow as tf
 import numpy as np 
 import tqdm
 import rouge
+# import GPUtil
 
 from nltk.translate.bleu_score import corpus_bleu
 from nltk.util import ngrams
@@ -216,6 +217,7 @@ class Controller(object):
     print("Start training ...")
 
     os.environ["CUDA_VISIBLE_DEVICES"] = self.gpu_id
+
     tf.set_random_seed(self.random_seed)
 
     self.id2word = dset.id2word
@@ -230,67 +232,84 @@ class Controller(object):
     target_metrics = self.target_metrics
     model_name_version = self.model_name_version
 
-    gpu_config = tf.ConfigProto()
-    gpu_config.gpu_options.allow_growth = True
-    sess = tf.Session(config=gpu_config)
-    sess.run(tf.global_variables_initializer())
+# mojo to debug memory allocation; may reduce training speed
+    run_metadata = tf.RunMetadata()
+    try:
+      gpu_config = tf.ConfigProto()
+      gpu_config.gpu_options.allow_growth = True
+      sess = tf.Session(config=gpu_config) 
+      sess.run(tf.global_variables_initializer(), options=tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE, output_partition_graphs=True), run_metadata=run_metadata)
+# original (remove GPUtil)
+      # print("GPU mem 1 %s" % GPUtil.showUtilization())
+      # sess.run(tf.global_variables_initializer())
+      # print("GPU mem 2 %s" % GPUtil.showUtilization())
 
-    # restore lm for evaluation 
-    if(model_name != "lm"): 
-      if("lm" in self.eval_metrics_list):
-        print("Restore the language model ... ")
-        self.lm.model_saver.restore(sess, self.lm_load_path)
+      # restore lm for evaluation 
+      if(model_name != "lm"): 
+        if("lm" in self.eval_metrics_list):
+          print("Restore the language model ... ")
+          self.lm.model_saver.restore(sess, self.lm_load_path)
 
-    # training preparation 
-    num_batches = dset.num_batches(batch_size, "train")
-    best_target_metrics = -100000
-    best_epoch = -1
-    print("%d batches in total" % num_batches)
-    print("metrics of first 200 batchs are not reliable ")
+      # training preparation 
+      num_batches = dset.num_batches(batch_size, "train")
+      best_target_metrics = -100000
+      best_epoch = -1
+      print("%d batches in total" % num_batches)
+      print("metrics of first 200 batchs are not reliable ")
 
-    for ei in range(start_epoch, start_epoch + num_epoch):
-      start_time = time.time()
+      for ei in range(start_epoch, start_epoch + num_epoch):
+        start_time = time.time()
 
-      for bi in range(num_batches):
-      # for bi in range(100):
-        batch_dict = dset.next_batch("train", batch_size, model_name)
-        batch_dict["drop_out"] = drop_out
-        output_dict = model.train_step(sess, batch_dict, ei)
-        train_log.update(output_dict)
+        for bi in range(num_batches):
+        # for bi in range(100):
+          batch_dict = dset.next_batch("train", batch_size, model_name)
+          batch_dict["drop_out"] = drop_out
+          output_dict = model.train_step(sess, batch_dict, ei)
+          train_log.update(output_dict)
 
-        if(bi % 20 == 0): 
-          print(".", end = " ", flush=True)
-        if(bi % print_interval == 0):
-          print("\n%s: e-%d, b-%d, t-%.2f" % 
-            (model_name_version, ei, bi, time.time() - start_time))
-          train_log.print()
+          if(bi % 20 == 0): 
+            print(".", end = " ", flush=True)
+          if(bi % print_interval == 0):
+            print("\n%s: e-%d, b-%d, t-%.2f" % 
+              (model_name_version, ei, bi, time.time() - start_time))
+            train_log.print()
 
-      print("\n\nepoch %d training finished" % ei)
+        print("\n\nepoch %d training finished" % ei)
+        # raise ValueError('Bogus exception to test run_metadata logging')
 
-      if(ei >= 0):
-        if(self.bow_pred_method == "seq2seq"):
-          self.encoder_eval(model, dset, sess, "test")
-        else: 
-          metrics_dict = self.eval(model_name, model, dset, sess, "test", ei=ei)
-          if(metrics_dict[target_metrics] > best_target_metrics):
-            best_epoch = ei
-            print("increase validation %s from %.4f to %.4f, update model" %
-              (target_metrics, best_target_metrics, metrics_dict[target_metrics]))
-            save_path = self.model_path + "/model-e%d.ckpt" % ei
-            if(self.save_ckpt): 
-              model.model_saver.save(sess, save_path)
-              print("saving model to %s" % save_path)
-            best_target_metrics = metrics_dict[target_metrics]
+        if(ei >= 0):
+          if(self.bow_pred_method == "seq2seq"):
+            self.encoder_eval(model, dset, sess, "test")
           else: 
-            print("no performance increase, keep the best model at epoch %d" %
-              best_epoch)
-            print("best %s: %.4f" % (target_metrics, best_target_metrics))
+            metrics_dict = self.eval(model_name, model, dset, sess, "test", ei=ei)
+            if(metrics_dict[target_metrics] > best_target_metrics):
+              best_epoch = ei
+              print("increase validation %s from %.4f to %.4f, update model" %
+                (target_metrics, best_target_metrics, metrics_dict[target_metrics]))
+              save_path = self.model_path + "/model-e%d.ckpt" % ei
+              if(self.save_ckpt): 
+                model.model_saver.save(sess, save_path)
+                print("saving model to %s" % save_path)
+              best_target_metrics = metrics_dict[target_metrics]
+            else: 
+              print("no performance increase, keep the best model at epoch %d" %
+                best_epoch)
+              print("best %s: %.4f" % (target_metrics, best_target_metrics))
 
-      print("\nepoch %d, time cost %.2f\n" % (ei, time.time() - start_time))
-      train_log.print()
-      if(self.write_output): train_log.write(ei, self.log_metrics)
-      train_log.reset()
-      print("")
+        print("\nepoch %d, time cost %.2f\n" % (ei, time.time() - start_time))
+        train_log.print()
+        if(self.write_output): train_log.write(ei, self.log_metrics)
+        train_log.reset()
+        print("")
+    except:
+      print("========== Exception: Dumping controller metadata ===========")
+      with open(self.output_path + "controller_run_metadata.txt", "w") as out:
+        out.write(str(run_metadata))
+      raise
+    else:
+      print("========== Clean exit: Dumping controller metadata ===========")
+      with open(self.output_path + "controller_run_metadata.txt", "w") as out:
+        out.write(str(run_metadata))
     return 
 
   def eval_metrics(self, sess, output_dict, batch_dict):

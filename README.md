@@ -1,4 +1,9 @@
-# Fork
+# Status
+
+The conda setup up works, but I'm having trouble making Parabank2 fit on my GPU, so it hasn't been tested properly.
+There's also a lot more work required in order to run new sentences through a trained model than I previously anticipated, so I'm pausing to decide next steps
+
+## Fork
 
 This fork:
 
@@ -9,7 +14,8 @@ To train:
 
 - Download the parabank2.zip file to `data/parabank2` ; make sure the zip is called `parabank2.zip`
 - Run `dotnet fsi reformat.fsx` to format the zipped data without explicitly unzipping, creating `train.txt`
-- Run `source train-parabank` from the repo base directory
+- Run `index-split.sh` to create the train/test index files, moving them to `src/parabank2_train_index.txt` and `src/parabank2_dev_index.txt`.
+- Run `source train-parabank` (or `source train-quora`) from the repo base directory
 
 --------------------------------
 

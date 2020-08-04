@@ -127,4 +127,7 @@ def main():
   return 
 
 if __name__ == "__main__":
+  print( "Sanity check for GPU ID; check below")
+  print( "device names %s" % tf.test.gpu_device_name())
+  print( "=====================================")
   main()
